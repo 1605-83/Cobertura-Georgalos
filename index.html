@@ -108,6 +108,13 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
 
 <h2>Cobertura total Georgalos / Cereal Food <span class="tag" id="tagTot"></span></h2>
 <p class="desc">Clientes que compraron cualquier producto de Georgalos o General Cereals (Cereal Food) en el período. Cada vendedor tiene la misma meta de clientes con compra; el objetivo total es la suma de las seis metas.</p>
+<div class="controls" style="margin:0 0 10px">
+  <label>Mes <select id="tMes" aria-label="Mes del cuadro total"></select></label>
+  <label>Del día <input type="number" id="tDesde" min="1" max="31" step="1" value="1"></label>
+  <label>al <input type="number" id="tHasta" min="1" max="31" step="1" value="31"></label>
+  <button class="ghost" id="tTodo">Mes completo</button>
+  <span class="desc" id="tRango" style="margin:0"></span>
+</div>
 <div id="tblTot"></div>
 
 
@@ -151,13 +158,13 @@ if(st.per) $('per').value=st.per;
 if(st.pend===false) $('pend').checked=false;
 if(st.iva) $('iva').value=st.iva;
 
-function calc(codes, obj, metaVend){
+function calc(codes, obj, metaVend, src){
   const per=$('per').value, set=codes?new Set(codes):null;
   const by={}; D.V.forEach(v=>by[v.cod]={cli:{},neto:0,q:0});
   const inclP=$('pend').checked;
   const conIva=$('iva').value==='b';
-  D.rows.forEach(([p,v,k,c,n,q,pd,b])=>{
-    if(per!=='a' && p!==per) return;
+  (src||D.rows).forEach(([p,v,k,c,n,q,pd,b])=>{
+    if(!src && per!=='a' && p!==per) return;
     if(pd && !inclP) return;
     if(set && !set.has(c)) return;
     const o=by[v]; o.cli[k]=(o.cli[k]||0)+n; o.neto+=(conIva?b:n); o.q+=q;
@@ -198,7 +205,7 @@ function render(){
   const pername=D.lab[per]+($('pend').checked?' · incluye pedidos sin facturar':'');
   $('sub').textContent=`Vendedores 24, 26, 27, 28, 29 y 30 · Período: ${pername} · Base total 852 clientes`;
   const MV=Math.min(Math.max(+$('objV').value||48,1),200), OT=MV*6, ot=OT/852;
-  const rb=calc(BAR,ob), rn=calc(NUT,on), rg=calc(D.geo,ob), rt=calc(D.cf,ot,MV);
+  const rb=calc(BAR,ob), rn=calc(NUT,on), rg=calc(D.geo,ob), rt=calc(D.cf,ot,MV,filasTot());
   const ct=rt.reduce((a,r)=>a+r.cc,0);
   const tb=852, cb=rb.reduce((a,r)=>a+r.cc,0), cn=rn.reduce((a,r)=>a+r.cc,0), cg=rg.reduce((a,r)=>a+r.cc,0);
   const fact=rg.reduce((a,r)=>a+r.neto,0), metaB=rb.reduce((a,r)=>a+r.meta,0), metaN=rn.reduce((a,r)=>a+r.meta,0), fB=rb.reduce((a,r)=>a+r.falta,0), fN=rn.reduce((a,r)=>a+r.falta,0);
@@ -227,6 +234,24 @@ $('pend').addEventListener('change',()=>{st.pend=$('pend').checked;save();render
 $('objB').addEventListener('change',()=>{st.objB=+$('objB').value;save();render();});
 $('objN').addEventListener('change',()=>{st.objN=+$('objN').value;save();render();});
 $('objV').addEventListener('change',()=>{st.objV=+$('objV').value;save();render();});
+// ---- Cuadro total: mes y rango de días propios (por defecto, el mes más reciente completo) ----
+function filasTot(){
+  const ym=+$('tMes').value||D.meses[0];
+  let d1=Math.min(Math.max(+$('tDesde').value||1,1),31), d2=Math.min(Math.max(+$('tHasta').value||31,1),31);
+  if(d1>d2) [d1,d2]=[d2,d1];
+  const out=[]; let dmin=0,dmax=0;
+  D.all.forEach(([y,d,v,k,c,n,q,pd,b])=>{ if(y!==ym||d<d1||d>d2) return;
+    if(!dmin||d<dmin)dmin=d; if(d>dmax)dmax=d; out.push(['x',v,k,c,n,q,pd,b]); });
+  const mm=dd(ym%100);
+  $('tRango').textContent=dmin?`Ventas del ${dd(dmin)}/${mm} al ${dd(dmax)}/${mm}`:'Sin ventas en ese rango';
+  return out;
+}
+function initTot(){
+  $('tMes').innerHTML=D.meses.map(ym=>{const s=MESES[ym%100-1]+' '+Math.floor(ym/100);return `<option value="${ym}">${s[0].toUpperCase()+s.slice(1)}</option>`;}).join('');
+  $('tMes').value=D.meses[0];
+}
+['tMes','tDesde','tHasta'].forEach(id=>$(id).addEventListener('change',render));
+$('tTodo').addEventListener('click',()=>{$('tDesde').value=1;$('tHasta').value=31;render();});
 $('aplicar').addEventListener('click',()=>{BAR=parseCodes($('cBar').value);NUT=parseCodes($('cNut').value);st.bar=BAR;st.nut=NUT;save();render();});
 $('restaurar').addEventListener('click',()=>{BAR=DEF_BAR;NUT=DEF_NUT;delete st.bar;delete st.nut;save();render();});
 
@@ -281,7 +306,9 @@ function procesar(txt,nombre){
   $('optO').textContent=cap(mo);$('optS').textContent=cap(ms);$('optA').textContent=cap(MESES[(prevYM%100)-1])+' + '+MESES[m-1];
   const lab={o:`${mo} (${fmtD(dmin.o)} al ${fmtD(dmax.o)})`,s:dmin.s?`${ms} (${fmtD(dmin.s)} al ${fmtD(dmax.s)})`:`${ms} (sin datos)`,a:`${ms} y ${mo}`};
   const V=Object.entries(BASE).map(([c,b])=>({cod:+c,nom:names[c]||('Vendedor '+c),base:b}));
-  return {rows,arts,V,geo:[...geo],cf:[...cf],lab,cl};
+  const all=recs.map(x=>[x.ym,x.d[2],x.cv,x.k,x.c,x.n,x.q,x.pend,x.b]);
+  const meses=[...new Set(recs.map(x=>x.ym))].sort((a,b)=>b-a);
+  return {rows,arts,V,geo:[...geo],cf:[...cf],lab,cl,all,meses};
 }
 async function cargarRepo(){
   const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/',{cache:'no-store'});
@@ -296,7 +323,7 @@ async function cargarRepo(){
 let booted=false;
 function arrancar(txt,nombre){
   try{D=procesar(txt,nombre);$('fuente').textContent='Archivo: '+nombre+'.';
-    $('loadMsg').style.display='none';$('loadPick').style.display='none';$('app').style.display='block';booted=true;render();}
+    $('loadMsg').style.display='none';$('loadPick').style.display='none';$('app').style.display='block';booted=true;initTot();render();}
   catch(e){$('loadMsg').textContent='No se pudo procesar el archivo: '+e.message;$('loadPick').style.display='block';}
 }
 $('csvFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;if(booted){location.reload();return;}
