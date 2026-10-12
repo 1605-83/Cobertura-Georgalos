@@ -89,7 +89,6 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
     <label><input type="checkbox" id="pend" checked style="width:auto"> Incluir pedidos sin facturar</label>
     <label>Objetivo barras <input type="number" id="objB" min="1" max="100" step="1" value="30">%</label>
     <label>Objetivo Nutrifood <input type="number" id="objN" min="1" max="100" step="1" value="15">%</label>
-    <label>Meta total por vendedor (Georgalos / Cereal Food) <input type="number" id="objV" min="1" max="200" step="1" value="48"> clientes</label>
   </div>
 </header>
 
@@ -152,7 +151,7 @@ try{ st=JSON.parse(localStorage.getItem('georgalos-cob-v2')||'{}')||{}; }catch(e
 const save=()=>{ try{ localStorage.setItem('georgalos-cob-v2',JSON.stringify(st)); }catch(e){} };
 const parseCodes = s => [...new Set(String(s).split(/[^0-9]+/).filter(Boolean).map(Number))];
 let BAR = st.bar || DEF_BAR, NUT = st.nut || DEF_NUT;
-if(st.objV) $('objV').value=st.objV; if(st.objB) $('objB').value=st.objB; if(st.objN) $('objN').value=st.objN;
+if(st.objB) $('objB').value=st.objB; if(st.objN) $('objN').value=st.objN;
 const OB=()=>(+$('objB').value||30)/100, ON=()=>(+$('objN').value||15)/100;
 if(st.per) $('per').value=st.per;
 if(st.pend===false) $('pend').checked=false;
@@ -204,7 +203,7 @@ function render(){
   const per=$('per').value, ob=OB(), on=ON();
   const pername=D.lab[per]+($('pend').checked?' · incluye pedidos sin facturar':'');
   $('sub').textContent=`Vendedores 24, 26, 27, 28, 29 y 30 · Período: ${pername} · Base total 852 clientes`;
-  const MV=Math.min(Math.max(+$('objV').value||48,1),200), OT=MV*6, ot=OT/852;
+  const MV=48, OT=MV*6, ot=OT/852;
   const rb=calc(BAR,ob), rn=calc(NUT,on), rg=calc(D.geo,ob), rt=calc(D.cf,ot,MV,filasTot());
   const ct=rt.reduce((a,r)=>a+r.cc,0);
   const tb=852, cb=rb.reduce((a,r)=>a+r.cc,0), cn=rn.reduce((a,r)=>a+r.cc,0), cg=rg.reduce((a,r)=>a+r.cc,0);
@@ -233,7 +232,6 @@ $('iva').addEventListener('change',()=>{st.iva=$('iva').value;save();render();})
 $('pend').addEventListener('change',()=>{st.pend=$('pend').checked;save();render();});
 $('objB').addEventListener('change',()=>{st.objB=+$('objB').value;save();render();});
 $('objN').addEventListener('change',()=>{st.objN=+$('objN').value;save();render();});
-$('objV').addEventListener('change',()=>{st.objV=+$('objV').value;save();render();});
 // ---- Cuadro total: mes y rango de días propios (por defecto, el mes más reciente completo) ----
 function filasTot(){
   const ym=+$('tMes').value||D.meses[0];
