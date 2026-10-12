@@ -105,8 +105,8 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
 <p class="desc" id="descNut" hidden></p>
 <div id="tblNut"></div>
 
-<h2>Cobertura total Georgalos / Cereal Food <span class="tag" id="tagTot"></span></h2>
-<p class="desc">Clientes que compraron cualquier producto de Georgalos o General Cereals (Cereal Food) en el período. Cada vendedor tiene la misma meta de clientes con compra; el objetivo total es la suma de las seis metas.</p>
+<h2>Cobertura total Georgalos y General Cereals <span class="tag" id="tagTot"></span></h2>
+<p class="desc">Clientes que compraron cualquier producto de Georgalos o General Cereals en el período. Cada vendedor tiene la misma meta de clientes con compra; el objetivo total es la suma de las seis metas.</p>
 <div class="controls" style="margin:0 0 10px">
   <label>Mes <select id="tMes" aria-label="Mes del cuadro total"></select></label>
   <label>Del día <input type="number" id="tDesde" min="1" max="31" step="1" value="1"></label>
@@ -214,7 +214,7 @@ function render(){
     ['k3','Clientes con compra barras',fmtN(cb),`Faltan ${fmtN(fB)} para el objetivo`],
     ['k4','Cobertura cereales Nutrifood',fmtP(cn/tb),`Objetivo ${fmtN(on*100)}% = ${fmtN(metaN)} clientes`],
     ['k5','Clientes con compra Nutrifood',fmtN(cn),`Faltan ${fmtN(fN)} para el objetivo`],
-    ['k6','Cobertura total Georgalos / Cereal Food',fmtP(ct/tb),`${fmtN(ct)} de ${fmtN(OT)} clientes · ${ct>=OT?'✔ objetivo cumplido':'faltan '+fmtN(OT-ct)}`]
+    ['k6','Cobertura total Georgalos y General Cereals',fmtP(ct/tb),`${fmtN(ct)} de ${fmtN(OT)} clientes · ${ct>=OT?'✔ objetivo cumplido':'faltan '+fmtN(OT-ct)}`]
   ].map(k=>`<div class="kpi ${k[0]}"><div class="l">${k[1]}</div><div class="v">${k[2]}</div><div class="n">${k[3]}</div></div>`).join('');
   const desc=codes=>{ const con=codes.filter(c=>D.arts[c]); return `${codes.length} códigos: ${codes.join(', ')}.`+(con.length?` Con ventas en el archivo: ${con.map(c=>D.arts[c]).join(' · ')}.`:''); };
   $('tagBar').textContent=`Objetivo ${fmtN(ob*100)}%`; $('tagNut').textContent=`Objetivo ${fmtN(on*100)}%`;
