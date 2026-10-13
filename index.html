@@ -321,6 +321,8 @@ async function cargarRepo(){
 }
 let booted=false;
 const etiquetaAct=n=>{ const m=String(n||'').match(/(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/); return (m? `Datos de ventas al ${m[3]}/${m[2]}/${m[1]} · ` : '')+'Se actualiza a las 7 hs y 13:30 hs'; };   // fecha de los datos (del nombre del CSV) y horario del robot
+// carteras de clientes por vendedor: carteras.json, lo arma el robot con los clientes activos de la ficha de Gescom
+const CARTERAS=fetch('carteras.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok? r.json() : null).catch(()=>null);
 function arrancar(txt,nombre){
   try{D=procesar(txt,nombre);$('hAct').textContent=etiquetaAct(nombre);$('hAct').hidden=false;$('fuente').textContent='Archivo: '+nombre+'.';
     $('loadMsg').style.display='none';$('loadPick').style.display='none';$('app').style.display='block';booted=true;initTot();render();}
@@ -328,7 +330,7 @@ function arrancar(txt,nombre){
 }
 $('csvFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;if(booted){location.reload();return;}
   arrancar(new TextDecoder('windows-1252').decode(await f.arrayBuffer()),f.name);});
-(async()=>{try{const {txt,nombre}=await cargarRepo();arrancar(txt,nombre);}
+(async()=>{try{const {txt,nombre}=await cargarRepo();const cc=await CARTERAS;if(cc&&cc.v)for(const k of Object.keys(BASE))if(cc.v[k])BASE[k]=cc.v[k].length;arrancar(txt,nombre);}
   catch(e){$('loadMsg').textContent=e.message+'. Podés abrir el CSV manualmente:';$('loadPick').style.display='block';}})();
 </script>
 </body>
