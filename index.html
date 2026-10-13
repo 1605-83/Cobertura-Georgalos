@@ -139,7 +139,7 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
   Cliente con compra = cliente con importe neto positivo en los artículos del grupo en el período (ventas menos devoluciones).
   Cobertura = clientes con compra ÷ base de clientes del vendedor. Faltan = clientes que hay que sumar para llegar al objetivo.
   Pedidos sin facturar = comprobantes de venta cargados que todavía no tienen fecha de factura (se ubican por la fecha de carga); se pueden excluir con la casilla de arriba. Cereales Nutrifood son del proveedor General Cereals. La cobertura se calcula siempre sobre el importe neto; el selector de IVA solo cambia cómo se muestran los importes. Verde: objetivo cumplido; amarillo: dos tercios del objetivo o más; rojo: menos. 
-  Base de clientes = almacenes y autoservicios activos de la cartera de cada vendedor en Gescom (según el ramo de la ficha); solo cuentan como clientes con compra los de esa base. La venta en pesos incluye a todos los clientes. Se toma el CSV más reciente del repositorio. <span id="fuente"></span>
+  Base de clientes = todos los clientes activos de la cartera de cada vendedor en Gescom. Se toma el CSV más reciente del repositorio. <span id="fuente"></span>
 </footer>
 </div>
 
@@ -186,7 +186,7 @@ function calc(codes, obj, metaVend, src){
     if(pd && !inclP) return;
     if(set && !set.has(c)) return;
     const o=by[v]; o.neto+=(conIva?b:n); o.q+=q;
-    // la cobertura cuenta solo clientes de la base (almacenes y autoservicios de la cartera del vendedor)
+    // cobertura: todos los clientes del vendedor con compra (BASE_CLI queda en null: base completa)
     const ck=String((D.cl[k]||[k])[0]).trim();
     if(BASE_CLI && !(BASE_CLI[v]&&BASE_CLI[v].has(ck))) return;
     o.cli[ck]=(o.cli[ck]||0)+n;
@@ -203,7 +203,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 function subfila(r, conVenta){
   const cols=conVenta?10:9;
   const body=r.sin.length?`<div class="sublist"><table><thead><tr><th class="l">Cliente</th><th class="l">Razón social</th><th class="l">Dirección</th><th class="l">Localidad</th><th class="l">Ramo</th><th class="l">Días de visita</th></tr></thead><tbody>${r.sin.map(c=>`<tr><td class="l">${esc(c[0])}</td><td class="l">${esc(c[1])}</td><td class="l">${esc(c[2]||'')}</td><td class="l">${esc(c[3]||'')}</td><td class="l">${esc(c[4]||'')}</td><td class="l">${esc(c[5]||'')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="subnote"><b>Todos los clientes de su base ya compraron.</b></p>';
-  return `<tr class="sub"><td colspan="${cols}"><p class="subnote"><b>${r.nom}: ${fmtN(r.sin.length)} almacenes y autoservicios de su cartera sin compra en el período elegido.</b></p>${body}</td></tr>`;
+  return `<tr class="sub"><td colspan="${cols}"><p class="subnote"><b>${r.nom}: ${fmtN(r.sin.length)} clientes de su cartera sin compra en el período elegido.</b></p>${body}</td></tr>`;
 }
 function tabla(rs, conVenta, obj, gid, objLbl){
   const tb=rs.reduce((a,r)=>a+r.base,0), tc=rs.reduce((a,r)=>a+r.cc,0), tn=rs.reduce((a,r)=>a+r.neto,0);
@@ -225,7 +225,7 @@ function render(){
   const per=$('per').value, ob=OB(), on=ON();
   const pername=D.lab[per]+($('pend').checked?' · incluye pedidos sin facturar':'');
   const TB=D.V.reduce((a,v)=>a+v.base,0);
-  $('sub').textContent=`Vendedores 24, 26, 27, 28, 29 y 30 · Período: ${pername} · Base total ${fmtN(TB)} almacenes y autoservicios`;
+  $('sub').textContent=`Vendedores 24, 26, 27, 28, 29 y 30 · Período: ${pername} · Base total ${fmtN(TB)} clientes`;
   const MV=48, OT=MV*6, ot=OT/TB;
   const rb=calc(BAR,ob), rn=calc(NUT,on), rg=calc(D.geo,ob), rt=calc(D.cf,ot,MV,filasTot());
   const ct=rt.reduce((a,r)=>a+r.cc,0);
@@ -282,7 +282,7 @@ $('restaurar').addEventListener('click',()=>{BAR=DEF_BAR;NUT=DEF_NUT;delete st.b
 
 const REPO='1605-83/Cobertura-Georgalos';
 const BASE={24:148,26:120,27:139,28:143,29:135,30:132};
-const RAMOS_BASE=/^\s*(autoservicio|almac[eé]n)/i; let BASE_CLI=null; const BASE_LST={};
+let BASE_CLI=null; const BASE_LST={};
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function parseCSV(txt){const rows=[];let row=[],f='',q=false;for(let i=0;i<txt.length;i++){const ch=txt[i];
   if(q){if(ch==='"'){if(txt[i+1]==='"'){f+='"';i++;}else q=false;}else f+=ch;}
@@ -358,9 +358,9 @@ function arrancar(txt,nombre){
 $('csvFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;if(booted){location.reload();return;}
   arrancar(new TextDecoder('windows-1252').decode(await f.arrayBuffer()),f.name);});
 (async()=>{try{const {txt,nombre}=await cargarRepo();const cc=await CARTERAS;
-    // base: solo almacenes y autoservicios de la cartera de cada vendedor (ramo de la ficha de Gescom)
-    if(cc&&cc.v){ BASE_CLI={}; for(const k of Object.keys(BASE)){ const l=(cc.v[k]||[]).filter(c=>RAMOS_BASE.test(c[4]||''));
-      BASE[k]=l.length; BASE_LST[k]=l; BASE_CLI[k]=new Set(l.map(c=>String(c[0]).trim())); } }
+    // base: la cartera completa de cada vendedor (clientes activos de la ficha de Gescom)
+    if(cc&&cc.v){ for(const k of Object.keys(BASE)){ const l=cc.v[k]||[];
+      BASE[k]=l.length; BASE_LST[k]=l; } }
     arrancar(txt,nombre);}
   catch(e){$('loadMsg').textContent=e.message+'. Podés abrir el CSV manualmente:';$('loadPick').style.display='block';}})();
 </script>
