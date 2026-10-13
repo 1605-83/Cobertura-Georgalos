@@ -22,6 +22,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Archivo",system
 header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:3px solid var(--ink);padding-bottom:14px}
 h1{font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:900;margin:0;letter-spacing:-.02em;line-height:1.05}
 .sub{margin:6px 0 0;font-size:.95rem;color:var(--ink2)}
+.act{display:inline-block;margin:6px 0 0;padding:4px 12px;background:#FFE14D;color:#000;border:1px solid #000;border-radius:999px;font-size:.9rem;font-weight:700}.act[hidden]{display:none}
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .controls label{font-size:.85rem;display:flex;align-items:center;gap:6px}
 select,input{font:inherit;color:var(--ink);background:var(--input);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
@@ -74,7 +75,7 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
 <header>
   <div>
     <h1>Cobertura Georgalos<br>por vendedor</h1>
-    <p class="sub" id="sub"></p>
+    <p class="sub" id="sub"></p><p class="act" id="hAct" hidden></p>
   </div>
   <div class="controls">
     <label>Fecha <select id="fFecha" aria-label="Tipo de fecha"><option value="comp">De comprobante</option><option value="ent">De entrega</option><option value="car">De carga</option></select></label>
@@ -319,8 +320,9 @@ async function cargarRepo(){
   return {txt:new TextDecoder('windows-1252').decode(await d.arrayBuffer()),nombre:files[0].name};
 }
 let booted=false;
+const etiquetaAct=n=>{ const m=String(n||'').match(/(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/); return (m? `Datos de ventas al ${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]} hs · ` : '')+'Se actualiza solo: lun a vie 7:00 y 13:30 hs'; };   // fecha de los datos (del nombre del CSV) y horario del robot
 function arrancar(txt,nombre){
-  try{D=procesar(txt,nombre);$('fuente').textContent='Archivo: '+nombre+'.';
+  try{D=procesar(txt,nombre);$('hAct').textContent=etiquetaAct(nombre);$('hAct').hidden=false;$('fuente').textContent='Archivo: '+nombre+'.';
     $('loadMsg').style.display='none';$('loadPick').style.display='none';$('app').style.display='block';booted=true;initTot();render();}
   catch(e){$('loadMsg').textContent='No se pudo procesar el archivo: '+e.message;$('loadPick').style.display='block';}
 }
