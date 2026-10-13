@@ -64,6 +64,9 @@ tr.sub td{background:#fff;padding:0 12px 12px;white-space:normal}
 .sublist td,.sublist th{padding:5px 10px}
 .subnote{font-size:.8rem;color:var(--ink2);margin:8px 0 0}
 .empty{padding:14px;border:2px dashed #000;border-radius:8px;background:#FFF8D6;font-size:.92rem;margin-bottom:10px}
+details.cods{margin:0 0 10px;font-size:.88rem}
+details.cods summary{cursor:pointer;font-weight:700;display:inline-block;background:#fff;border:1px solid #000;border-radius:999px;padding:3px 12px}
+details.cods .sublist{max-width:720px;background:#fff}
 details.box{margin-top:26px;border:1px dashed var(--ink);border-radius:8px;padding:14px;background:var(--panel)}
 details.box summary{cursor:pointer;font-weight:700}
 details.box textarea{width:100%;min-height:60px;font:inherit;font-size:.85rem;margin:6px 0 10px;border:1px solid var(--line);border-radius:6px;padding:8px}
@@ -99,11 +102,11 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
 <section class="kpis" id="kpis"></section>
 
 <h2>Barras de cereal <span class="tag" id="tagBar"></span></h2>
-<p class="desc" id="descBar" hidden></p>
+<details class="cods"><summary id="sBar">Códigos que toma el tablero</summary><div id="descBar"></div></details>
 <div id="tblBar"></div>
 
 <h2>Cereales Nutrifood <span class="tag" id="tagNut"></span></h2>
-<p class="desc" id="descNut" hidden></p>
+<details class="cods"><summary id="sNut">Códigos que toma el tablero</summary><div id="descNut"></div></details>
 <div id="tblNut"></div>
 
 <h2>Cobertura total Georgalos y General Cereals <span class="tag" id="tagTot"></span></h2>
@@ -115,6 +118,7 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
   <button class="ghost" id="tTodo">Mes completo</button>
   <span class="desc" id="tRango" style="margin:0"></span>
 </div>
+<details class="cods"><summary id="sTot">Códigos que toma el tablero</summary><div id="descTot"></div></details>
 <div id="tblTot"></div>
 
 
@@ -219,7 +223,11 @@ function render(){
   ].map(k=>`<div class="kpi ${k[0]}"><div class="l">${k[1]}</div><div class="v">${k[2]}</div><div class="n">${k[3]}</div></div>`).join('');
   const desc=codes=>{ const con=codes.filter(c=>D.arts[c]); return `${codes.length} códigos: ${codes.join(', ')}.`+(con.length?` Con ventas en el archivo: ${con.map(c=>D.arts[c]).join(' · ')}.`:''); };
   $('tagBar').textContent=`Objetivo ${fmtN(ob*100)}%`; $('tagNut').textContent=`Objetivo ${fmtN(on*100)}%`;
-  $('descBar').textContent=desc(BAR); $('descNut').textContent=desc(NUT);
+  // desplegables con los codigos de cada cuadro (nombre del articulo sacado del detalle de ventas)
+  const lista=(codes,sid,did)=>{ $(sid).textContent=`▸ Códigos que toma el tablero (${codes.length})`;
+    $(did).innerHTML=`<div class="sublist"><table><thead><tr><th class="l">Código</th><th class="l">Artículo</th></tr></thead><tbody>${codes.map(c=>`<tr><td class="l cod">${c}</td><td class="l">${esc(D.arts[c]||'(sin ventas en el archivo)')}</td></tr>`).join('')}</tbody></table></div>`; };
+  lista(BAR,'sBar','descBar'); lista(NUT,'sNut','descNut');
+  lista([...D.cf].sort((a,b)=>String(D.arts[a]||'').localeCompare(String(D.arts[b]||''))),'sTot','descTot');
   $('tblBar').innerHTML=tabla(rb,true,ob,'b');
   const nutVacio=!NUT.some(c=>D.arts[c]);
   $('tblNut').innerHTML=(nutVacio?`<div class="empty"><b>Estos códigos no aparecen en el detalle de ventas</b> (en ningún período ni vendedor). Revisá los códigos en «Códigos de artículo de cada grupo», al pie.</div>`:'')+tabla(rn,true,on,'n');
