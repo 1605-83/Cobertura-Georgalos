@@ -277,7 +277,7 @@ $('aplicar').addEventListener('click',()=>{BAR=parseCodes($('cBar').value);NUT=p
 $('restaurar').addEventListener('click',()=>{BAR=DEF_BAR;NUT=DEF_NUT;delete st.bar;delete st.nut;save();render();});
 
 const REPO='1605-83/Cobertura-Georgalos';
-const BASE={24:147,26:120,27:134,28:153,29:135,30:163};
+const BASE={24:148,26:120,27:139,28:143,29:135,30:132};
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function parseCSV(txt){const rows=[];let row=[],f='',q=false;for(let i=0;i<txt.length;i++){const ch=txt[i];
   if(q){if(ch==='"'){if(txt[i+1]==='"'){f+='"';i++;}else q=false;}else f+=ch;}
