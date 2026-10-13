@@ -144,6 +144,19 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
 </div>
 
 <script>
+// Lista de archivos del repo: primero archivos.json (lo arma el robot, se sirve desde el mismo sitio y no tiene
+// limite de consultas); si no esta, la API de GitHub (60 consultas por hora por conexion).
+async function contenidoRepo(apiUrl, carpeta){
+  try{
+    const r=await fetch('archivos.json?t='+Date.now(),{cache:'no-store'});
+    if(r.ok){ const j=await r.json(); const pre=carpeta? carpeta+'/' : '';
+      const lst=(j.archivos||[]).filter(p=>pre? p.startsWith(pre) : !p.includes('/'))
+        .map(p=>({name:p.slice(pre.length), type:'file', download_url:p}));
+      if(lst.length) return {ok:true, status:200, json:async()=>lst}; }
+  }catch(e){}
+  return fetch(apiUrl,{cache:'no-store'});
+}
+
 let D = null;
 const DEF_BAR = [2331502,2332000,2332002,2332004,2332031,2332024,2332025,2332026,2332023,2332027,2332034,2332033,2332006,2331620,2332005,2332017,2332032,2332035,2332001];
 const DEF_NUT = [233441,233440,233445,233442];
@@ -318,7 +331,7 @@ function procesar(txt,nombre){
   return {rows,arts,V,geo:[...geo],cf:[...cf],lab,cl,all,meses};
 }
 async function cargarRepo(){
-  const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/',{cache:'no-store'});
+  const r=await contenidoRepo('https://api.github.com/repos/'+REPO+'/contents/','');
   if(!r.ok)throw new Error('No se pudo leer el repositorio ('+r.status+')');
   const files=(await r.json()).filter(f=>f.type==='file'&&/\.csv$/i.test(f.name));
   if(!files.length)throw new Error('No hay ningún archivo CSV en el repositorio');
