@@ -14,7 +14,7 @@ $ErrorActionPreference = 'Stop'
 $CONFIG = @{
   'Ventas-Grupo-Ayudin' = @{ proveedores = @('247');      meses = 1 }   # GRUPO AYUDIN ARGENTINA S.A
   'Ventas-Softys'       = @{ proveedores = @('150');      meses = 1 }   # SOFTYS ARGENTINA S.A
-  'Cobertura-Georgalos' = @{ proveedores = @('42','43');  meses = 2 }   # GEORGALOS + GENERAL CEREALS
+  'Cobertura-Georgalos' = @{ proveedores = @('42','43');  meses = 3 }   # GEORGALOS + GENERAL CEREALS
   'Concurso-Bic'        = @{ proveedores = @('119');      meses = 1 }   # BIC ARGENTINA S.A
   'concurso-softys'     = @{ proveedores = @('150');      desde = '2026-09-01' }   # SOFTYS, desde el inicio del concurso
   # Reporte diario LP-ELB: los proveedores del nomenclador del Excel (por nombre) y un CSV liviano con las columnas que usa.

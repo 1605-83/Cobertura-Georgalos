@@ -86,6 +86,7 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
       <select id="per">
         <option value="o" id="optO">Mes actual</option>
         <option value="s" id="optS">Mes anterior</option>
+        <option value="t" id="optT">Hace dos meses</option>
         <option value="a" id="optA">Los dos meses</option>
       </select></label>
     <label>Importe
@@ -182,7 +183,7 @@ function calc(codes, obj, metaVend, src){
   const inclP=$('pend').checked;
   const conIva=$('iva').value==='b';
   (src||D.rows).forEach(([p,v,k,c,n,q,pd,b])=>{
-    if(!src && per!=='a' && p!==per) return;
+    if(!src && (per==='a'? p==='t' : p!==per)) return;
     if(pd && !inclP) return;
     if(set && !set.has(c)) return;
     const o=by[v]; o.neto+=(conIva?b:n); o.q+=q;
@@ -321,16 +322,16 @@ function procesar(txt,nombre){
     cl[ek+(r[I.cli]||'').trim()]=[(r[I.cli]||'').trim(),(r[I.rs]||'').trim(),(r[I.dir]||'').trim(),(r[I.loc]||'').trim()];
     recs.push({ym,d:f,cv,k:ek+(r[I.cli]||'').trim(),c,n:num(r[I.neto]),q:num(r[I.cant]),pend,b:num(r[I.bru])});});
   if(!recs.length)throw new Error('El archivo no tiene ventas de los vendedores 24 a 30');
-  const y=Math.floor(maxYM/100),m=maxYM%100,prevYM=m===1?(y-1)*100+12:maxYM-1;
-  const rows=[];let dmin={o:null,s:null},dmax={o:null,s:null};
-  recs.forEach(x=>{const p=x.ym===maxYM?'o':x.ym===prevYM?'s':null;if(!p)return;
+  const y=Math.floor(maxYM/100),m=maxYM%100,prevYM=m===1?(y-1)*100+12:maxYM-1,prev2YM=prevYM%100===1?prevYM-89:prevYM-1;
+  const rows=[];let dmin={o:null,s:null,t:null},dmax={o:null,s:null,t:null};
+  recs.forEach(x=>{const p=x.ym===maxYM?'o':x.ym===prevYM?'s':x.ym===prev2YM?'t':null;if(!p)return;
     const iso=x.d[0]*10000+x.d[1]*100+x.d[2];if(!dmin[p]||iso<dmin[p])dmin[p]=iso;if(!dmax[p]||iso>dmax[p])dmax[p]=iso;
     rows.push([p,x.cv,x.k,x.c,x.n,x.q,x.pend,x.b]);});
   const fmtD=i=>i?dd(i%100)+'/'+dd(Math.floor(i/100)%100):'';
   const mo=MESES[m-1]+' '+y,ms=MESES[(prevYM%100)-1]+' '+Math.floor(prevYM/100);
   const cap=s=>s[0].toUpperCase()+s.slice(1);
-  $('optO').textContent=cap(mo);$('optS').textContent=cap(ms);$('optA').textContent=cap(MESES[(prevYM%100)-1])+' + '+MESES[m-1];
-  const lab={o:`${mo} (${fmtD(dmin.o)} al ${fmtD(dmax.o)})`,s:dmin.s?`${ms} (${fmtD(dmin.s)} al ${fmtD(dmax.s)})`:`${ms} (sin datos)`,a:`${ms} y ${mo}`};
+  $('optO').textContent=cap(mo);$('optS').textContent=cap(ms);const mt=MESES[(prev2YM%100)-1]+' '+Math.floor(prev2YM/100);$('optT').textContent=cap(mt);$('optA').textContent=cap(MESES[(prevYM%100)-1])+' + '+MESES[m-1];
+  const lab={o:`${mo} (${fmtD(dmin.o)} al ${fmtD(dmax.o)})`,s:dmin.s?`${ms} (${fmtD(dmin.s)} al ${fmtD(dmax.s)})`:`${ms} (sin datos)`,a:`${ms} y ${mo}`,t:dmin.t?`${mt} (${fmtD(dmin.t)} al ${fmtD(dmax.t)})`:`${mt} (sin datos)`};
   const V=Object.entries(BASE).map(([c,b])=>({cod:+c,nom:names[c]||('Vendedor '+c),base:b}));
   const all=recs.map(x=>[x.ym,x.d[2],x.cv,x.k,x.c,x.n,x.q,x.pend,x.b]);
   const meses=[...new Set(recs.map(x=>x.ym))].sort((a,b)=>b-a);
