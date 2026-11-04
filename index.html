@@ -88,6 +88,7 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
         <option value="s" id="optS">Mes anterior</option>
         <option value="t" id="optT">Hace dos meses</option>
         <option value="a" id="optA">Los dos meses</option>
+        <option value="x" id="optX">Los tres meses</option>
       </select></label>
     <label>Importe
       <select id="iva"><option value="n">Sin IVA</option><option value="b">Con IVA</option></select></label>
@@ -183,7 +184,7 @@ function calc(codes, obj, metaVend, src){
   const inclP=$('pend').checked;
   const conIva=$('iva').value==='b';
   (src||D.rows).forEach(([p,v,k,c,n,q,pd,b])=>{
-    if(!src && (per==='a'? p==='t' : p!==per)) return;
+    if(!src && per!=='x' && (per==='a'? p==='t' : p!==per)) return;
     if(pd && !inclP) return;
     if(set && !set.has(c)) return;
     const o=by[v]; o.neto+=(conIva?b:n); o.q+=q;
@@ -330,8 +331,8 @@ function procesar(txt,nombre){
   const fmtD=i=>i?dd(i%100)+'/'+dd(Math.floor(i/100)%100):'';
   const mo=MESES[m-1]+' '+y,ms=MESES[(prevYM%100)-1]+' '+Math.floor(prevYM/100);
   const cap=s=>s[0].toUpperCase()+s.slice(1);
-  $('optO').textContent=cap(mo);$('optS').textContent=cap(ms);const mt=MESES[(prev2YM%100)-1]+' '+Math.floor(prev2YM/100);$('optT').textContent=cap(mt);$('optA').textContent=cap(MESES[(prevYM%100)-1])+' + '+MESES[m-1];
-  const lab={o:`${mo} (${fmtD(dmin.o)} al ${fmtD(dmax.o)})`,s:dmin.s?`${ms} (${fmtD(dmin.s)} al ${fmtD(dmax.s)})`:`${ms} (sin datos)`,a:`${ms} y ${mo}`,t:dmin.t?`${mt} (${fmtD(dmin.t)} al ${fmtD(dmax.t)})`:`${mt} (sin datos)`};
+  $('optO').textContent=cap(mo);$('optS').textContent=cap(ms);const mt=MESES[(prev2YM%100)-1]+' '+Math.floor(prev2YM/100);$('optT').textContent=cap(mt);$('optX').textContent=cap(MESES[(prev2YM%100)-1])+' + '+MESES[(prevYM%100)-1]+' + '+MESES[m-1];$('optA').textContent=cap(MESES[(prevYM%100)-1])+' + '+MESES[m-1];
+  const lab={o:`${mo} (${fmtD(dmin.o)} al ${fmtD(dmax.o)})`,s:dmin.s?`${ms} (${fmtD(dmin.s)} al ${fmtD(dmax.s)})`:`${ms} (sin datos)`,a:`${ms} y ${mo}`,x:`${mt}, ${ms} y ${mo}`,t:dmin.t?`${mt} (${fmtD(dmin.t)} al ${fmtD(dmax.t)})`:`${mt} (sin datos)`};
   const V=Object.entries(BASE).map(([c,b])=>({cod:+c,nom:names[c]||('Vendedor '+c),base:b}));
   const all=recs.map(x=>[x.ym,x.d[2],x.cv,x.k,x.c,x.n,x.q,x.pend,x.b]);
   const meses=[...new Set(recs.map(x=>x.ym))].sort((a,b)=>b-a);
