@@ -52,6 +52,10 @@ tbody tr:hover{background:#FFEBD9}
 tfoot td{font-weight:800;border-top:2px solid var(--ink);border-bottom:0;background:var(--bar)}
 .cod{font-weight:800}
 .chip{display:inline-block;min-width:62px;text-align:center;padding:2px 8px;border-radius:999px;border:1px solid #000;font-weight:800}
+.pbar{position:relative;display:inline-block;width:110px;height:24px;background:#E6E6E6;border:1px solid #BDBDBD;border-radius:6px;overflow:hidden;vertical-align:middle}
+.pbar i{position:absolute;left:0;top:0;bottom:0}
+.pbar b{position:relative;display:block;text-align:center;line-height:22px;font-weight:700;color:#000}
+.pbar b.cl{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35)}
 .meter{position:relative;height:16px;min-width:180px;border:1px solid #000;border-radius:3px;background:#fff;overflow:hidden}
 .meter i{position:absolute;inset:0 auto 0 0}
 .meter b{position:absolute;top:-2px;bottom:-2px;width:3px;background:#000}
@@ -147,6 +151,9 @@ footer{margin-top:22px;font-size:.8rem;color:var(--ink2);max-width:85ch}
 </div>
 
 <script>
+// barra que se llena con el numero adentro (formato C del Reporte diario, pedido de Bruno, 09/11/2026)
+const PBAR_C={'#7CFF6B':'#2EBD4E','#FFE14D':'#F2C200','#FF6B6B':'#E5484D','VAR(--OK)':'#2EBD4E','VAR(--MID)':'#F2C200','VAR(--LOW)':'#E5484D'};
+function pbarC(v,c){ c=PBAR_C[String(c).toUpperCase()]||c; const bl=(c==='#2EBD4E'||c==='#E5484D'||c==='var(--ok)'||c==='var(--low)')&&v>=.5; return `<span class="pbar"><i style="width:${Math.max(0,Math.min(100,v*100))}%;background:${c}"></i><b${bl?' class="cl"':''}>${(v*100).toLocaleString('es-AR',{minimumFractionDigits:1,maximumFractionDigits:1})}%</b></span>`; }
 // Lista de archivos del repo: primero archivos.json (lo arma el robot, se sirve desde el mismo sitio y no tiene
 // limite de consultas); si no esta, la API de GitHub (60 consultas por hora por conexion).
 async function contenidoRepo(apiUrl, carpeta){
@@ -218,10 +225,10 @@ function tabla(rs, conVenta, obj, gid, objLbl){
   return `<div class="tbl"><table>
   <thead><tr><th class="l">Código</th><th class="l">Vendedor</th><th>Base clientes</th><th>Clientes con compra</th><th>Cobertura</th><th class="l">Avance vs objetivo ${objLbl||fmtN(obj*100)+'%'}</th><th>Meta clientes</th><th>Faltan para objetivo</th>${conVenta?`<th>Venta $ ${$('iva').value==='b'?'con':'sin'} IVA</th>`:''}<th>Clientes sin compra</th></tr></thead>
   <tbody>${sorted.map(r=>`<tr><td class="l cod">${r.cod}</td><td class="l">${r.nom}</td><td>${fmtN(r.base)}</td><td><b>${fmtN(r.cc)}</b></td>
-    <td><span class="chip" style="background:${color(r.cob,r.obj||obj)}">${fmtP(r.cob)}</span></td><td class="l">${meter2(r.cob,r.obj||obj)}</td>
+    <td>${pbarC(r.cob,color(r.cob,r.obj||obj))}</td><td class="l">${meter2(r.cob,r.obj||obj)}</td>
     <td>${fmtN(r.meta)}</td><td><b>${r.falta?fmtN(r.falta):'✔ cumplido'}</b></td>${conVenta?`<td>${fmt$(r.neto)}</td>`:''}<td>${(()=>{const id=gid+'-'+r.cod,ab=ABIERTOS.has(id);return `<button class="exp" data-id="${id}" aria-expanded="${ab}">${ab?'▾':'▸'} Ver ${fmtN(r.sin.length)}</button>`;})()}</td></tr>${ABIERTOS.has(gid+'-'+r.cod)?subfila(r, conVenta):''}`).join('')}</tbody>
   <tfoot><tr><td class="l" colspan="2">Total (${rs.length} vendedores)</td><td>${fmtN(tb)}</td><td>${fmtN(tc)}</td>
-    <td><span class="chip" style="background:${color(tc/tb,fo)}">${fmtP(tc/tb)}</span></td><td class="l">${meter2(tc/tb,fo)}</td><td>${fmtN(rs.reduce((a,r)=>a+r.meta,0))}</td><td>${tf?fmtN(tf):'✔ cumplido'}</td>${conVenta?`<td>${fmt$(tn)}</td>`:''}<td></td></tr></tfoot>
+    <td>${pbarC(tc/tb,color(tc/tb,fo))}</td><td class="l">${meter2(tc/tb,fo)}</td><td>${fmtN(rs.reduce((a,r)=>a+r.meta,0))}</td><td>${tf?fmtN(tf):'✔ cumplido'}</td>${conVenta?`<td>${fmt$(tn)}</td>`:''}<td></td></tr></tfoot>
   </table></div>`;
 }
 function render(){
